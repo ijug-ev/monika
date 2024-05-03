@@ -1,0 +1,48 @@
+on:
+  push:
+    branches:
+      - master
+
+env:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "-B -e -fae -DinstallAtEnd=true -DdeployAtEnd=true"
+
+jobs:
+  maven:
+    runs-on: ubuntu-latest
+    container:
+      image: maven:3.9.6-eclipse-temurin-22-alpine
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/cache@master
+        with:
+          path: .m2/repository
+          key: ${{ hashFiles('**/pom.xml') }}
+      - run: mvn ${{ env.MAVEN_CLI_OPTS }} clean install
+      - uses: actions/upload-artifact@master
+        with:
+          name: app-jar
+          path: target/*.jar
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: maven
+    container:
+      image: docker:latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/download-artifact@master
+        with:
+          name: app-jar
+          path: target
+      - uses: docker/login-action@master
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          cp src/main/docker/Dockerfile .
+          cp target/*.jar .
+          docker context create builder-context
+          docker buildx create --driver docker-container --use builder-context
+          docker buildx build --platform=linux/arm64,linux/amd64 -t ghcr.io/${{ github.repository }}:${{ github.sha }} -t ghcr.io/${{ github.repository }}:latest --push .
