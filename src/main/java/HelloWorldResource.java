@@ -15,13 +15,6 @@ import jakarta.ws.rs.core.Response;
 
 @Path("question")
 public class HelloWorldResource {
-  private static final String RESPONSE = System.getenv().getOrDefault("ULTIMATE_ANSWER", "42");
-
-  @GET
-  @Path("ultimate")
-  public HelloWorldAnswer getResponse() {
-    return new HelloWorldAnswer(RESPONSE);
-  }
 
   @GET
   @Path("health")
@@ -49,20 +42,4 @@ public class HelloWorldResource {
         Response.status(200 + minimumFree, String.format("Smallest free volume is %d %%.", minimumFree)).build();
   }
 
-  private static final java.nio.file.Path DATA = java.nio.file.Path.of("/data");
-
-  @POST
-  @Path("counter/{id}")
-  public String count(@PathParam("id") String id) throws IOException {
-    if (Files.notExists(DATA))
-        throw new NotFoundException("The folder '/data' does not exist.");
-
-    final var file = DATA.resolve(id);
-    final var count = Long.toString(Files.exists(file) ? Long.parseLong(Files.readString(file)) + 1L : 0L);
-    Files.writeString(file, count, CREATE);
-
-    System.out.printf("[counter] '%s': %s%n", id, count);
-
-    return count;
-  }
 }
