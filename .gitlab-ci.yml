@@ -1,0 +1,41 @@
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "-B -e -fae -DinstallAtEnd=true -DdeployAtEnd=true"
+
+image: maven:3.9.6-eclipse-temurin-22-alpine
+
+cache:
+  paths:
+    - .m2/repository
+
+stages:
+  - maven
+  - docker
+
+maven:
+  stage: maven
+  script:
+    - mvn $MAVEN_CLI_OPTS clean install
+  artifacts:
+    paths:
+      - target/*.jar
+  only:
+    - master
+
+docker:
+  stage: docker
+  image: docker:latest
+  services:
+  - docker:dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    - cp src/main/docker/Dockerfile .
+    - cp target/*.jar .
+    - docker context create builder-context
+    - docker buildx create --driver docker-container --use builder-context
+    - docker buildx build --platform=linux/arm64,linux/amd64 -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG -t $CI_REGISTRY_IMAGE:latest --push .
+  after_script:
+    - docker logout $CI_REGISTRY
+  only:
+    - master
