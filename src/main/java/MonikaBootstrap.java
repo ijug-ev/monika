@@ -10,7 +10,7 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.UriBuilder;
 
-public class HelloWorldBootstrap {
+public class MonikaBootstrap {
 	public static void main(final String[] args) throws InterruptedException, ExecutionException {
 		final var port = Integer.parseInt(System.getenv().getOrDefault("IP_PORT", "8080"));
 
@@ -21,7 +21,7 @@ public class HelloWorldBootstrap {
 		}
 
 		final var config = SeBootstrap.Configuration.builder().port(port).build();
-		SeBootstrap.start(HelloWorldApplication.class, config).thenAccept(instance -> {
+		SeBootstrap.start(MonikaApplication.class, config).thenAccept(instance -> {
 			instance.stopOnShutdown(stopResult -> {
 				try {
 					System.err.printf("Stop result: %s%n", stopResult);
@@ -46,10 +46,10 @@ public class HelloWorldBootstrap {
 		Thread.currentThread().join();
 	}
 
-	private static class HelloWorldApplication extends Application {
+	private static class MonikaApplication extends Application {
         @Override
 		public Set<Class<?>> getClasses() {
-			return Set.of(HelloWorldResource.class);
+			return Set.of(MonikaResource.class);
 		}
 
         private static final Map<String, Object> PROPERTIES;
@@ -72,7 +72,7 @@ public class HelloWorldBootstrap {
 
 	private static HEALTH checkHealth(final int port, final boolean ignoreErrors) {
 		try {
-			final var uri = UriBuilder.newInstance().scheme("http").host("localhost").port(port).path(HelloWorldResource.class).path(HelloWorldResource.class, "getHealth");
+			final var uri = UriBuilder.newInstance().scheme("http").host("localhost").port(port).path(MonikaResource.class).path(MonikaResource.class, "getHealth");
 			System.out.println("HEALTHCHECK " + uri);
 			ClientBuilder.newClient().target(uri).request().get(String.class);
             

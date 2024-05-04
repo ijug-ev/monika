@@ -2,7 +2,7 @@
 mvn clean package
 cp src/main/docker/Dockerfile target
 pushd ./target
-docker build -t helloworld .
+docker build -t monika .
 popd
-docker run -it --rm -P helloworld
+docker run -it --rm -P monika
 

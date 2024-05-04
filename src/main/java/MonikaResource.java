@@ -14,7 +14,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 
 @Path("question")
-public class HelloWorldResource {
+public class MonikaResource {
 
   @GET
   @Path("health")
