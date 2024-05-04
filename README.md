@@ -5,8 +5,8 @@
 
 ## Use
 
-* Disk Free: `/question/status` responds status `100` on hardware failures, status `901` if volume has less than 20% free, status `2XX` in all other cases (where `XX` is the lowest free value in %). The status text contains the smallest free percentage of all monitored volumes. Example: `260 Smallest free volume is 60 %.`
-* Health Check: `/question/health` responds status 200 always and says `I'm fine!' in the body.
+* Disk Free: `/monika/status` responds status `100` on hardware failures, status `901` if volume has less than 20% free, status `2XX` in all other cases (where `XX` is the lowest free value in %). The status text contains the smallest free percentage of all monitored volumes. Example: `260 Smallest free volume is 60 %.`
+* Health Check: `/monika/health` responds status 200 always and says `I'm fine!' in the body.
 
 
 ## Administrate

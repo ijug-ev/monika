@@ -13,7 +13,7 @@ import jakarta.ws.rs.core.Configuration;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 
-@Path("question")
+@Path("monika")
 public class MonikaResource {
 
   @GET
