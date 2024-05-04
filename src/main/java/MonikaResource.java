@@ -19,7 +19,7 @@ public class MonikaResource {
   @GET
   @Path("health")
   public void health() {
-    // Implies 201 No Content, i. e. HEALTHY state
+    // Implies 204 No Content, i. e. HEALTHY state
   }
 
   @GET
