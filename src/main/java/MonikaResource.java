@@ -18,13 +18,13 @@ public class MonikaResource {
 
   @GET
   @Path("health")
-  public String getHealth() {
-    return "I'm fine!"; // Implies 200 OK
+  public void health() {
+    // Implies 201 No Content, i. e. HEALTHY state
   }
 
   @GET
   @Path("status")
-  public Response getStatus(@Context final Configuration config) {
+  public Response status(@Context final Configuration config) {
     final var monitoredPaths = (Collection<java.nio.file.Path>) config.getProperty("MONITORED_PATHS");
     assert monitoredPaths != null && !monitoredPaths.isEmpty() : "Monitored paths cannot be null nor empty";
     final var minimumFree = monitoredPaths.stream().mapToInt(path -> {

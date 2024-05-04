@@ -1,11 +1,16 @@
+import static jakarta.ws.rs.core.Response.Status.Family.REDIRECTION;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import jakarta.ws.rs.SeBootstrap;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.UriBuilder;
@@ -72,9 +77,10 @@ public class MonikaBootstrap {
 
 	private static HEALTH checkHealth(final int port, final boolean ignoreErrors) {
 		try {
-			final var uri = UriBuilder.newInstance().scheme("http").host("localhost").port(port).path(MonikaResource.class).path(MonikaResource.class, "getHealth");
+			final var uri = UriBuilder.newInstance().scheme("http").host("localhost").port(port).path(MonikaResource.class).path(MonikaResource.class, "health");
 			System.out.println("HEALTHCHECK " + uri);
-			ClientBuilder.newClient().target(uri).request().get(String.class);
+			if (!EnumSet.of(SUCCESSFUL, REDIRECTION).contains(ClientBuilder.newClient().target(uri).request().get().getStatusInfo().getFamily()))
+                throw new WebApplicationException();
             
 			System.out.println("HEALTHY");
 			return HEALTH.SUCCESS;
