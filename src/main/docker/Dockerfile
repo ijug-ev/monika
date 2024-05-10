@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/java17-debian12
+FROM gcr.io/distroless/java17-debian12:nonroot
 COPY monika-1.0-SNAPSHOT.jar /home
 RUN [ "java", "-XX:ArchiveClassesAtExit=monika.jsa", "-jar", "/home/monika-1.0-SNAPSHOT.jar", "--stop" ]
 RUN [ "java", "-XX:ArchiveClassesAtExit=healthcheck.jsa", "-jar", "/home/monika-1.0-SNAPSHOT.jar", "--check-health", "--ignore-errors" ]
