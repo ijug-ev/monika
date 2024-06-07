@@ -3,6 +3,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -40,6 +41,24 @@ public class MonikaResource {
     }).min().getAsInt();
     return minimumFree < 20 ? Response.status(901, "A volume is (nearly) full!").build() :
         Response.status(200 + minimumFree, String.format("Smallest free volume is %d %%.", minimumFree)).build();
+  }
+
+  @GET
+  @Path("metrics")
+  public String metrics(@Context final Configuration config) {
+    final var monitoredPaths = (Collection<java.nio.file.Path>) config.getProperty("MONITORED_PATHS");
+    assert monitoredPaths != null && !monitoredPaths.isEmpty() : "Monitored paths cannot be null nor empty";
+    return monitoredPaths.stream().map(path -> {
+        try {
+            final var fileStore = Files.getFileStore(path);
+            final var percentFree = Math.toIntExact(100 * fileStore.getUsableSpace() / fileStore.getTotalSpace());
+            System.out.printf("%s is %d %% free%n", path, percentFree);
+            return path + "," + percentFree;
+        } catch (final IOException e) {
+            e.printStackTrace();
+            return path + ",100"; // no need to bother *the invoker* with hardware problems - we can implement health check to cover this
+        }
+    }).collect(Collectors.joining("\n"));
   }
 
 }
