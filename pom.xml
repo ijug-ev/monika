@@ -12,6 +12,7 @@
 		<maven.compiler.release>17</maven.compiler.release>
 		<jaxrs.version>3.1.0</jaxrs.version>
 		<jersey.version>3.1.7</jersey.version>
+		<otelsdk.version>1.39.0</otelsdk.version>
 	</properties>
 
 	<dependencyManagement>
@@ -20,6 +21,14 @@
 				<groupId>org.glassfish.jersey</groupId>
 				<artifactId>jersey-bom</artifactId>
 				<version>${jersey.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-bom</artifactId>
+				<version>${otelsdk.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -49,6 +58,26 @@
 			<groupId>org.glassfish.jersey.connectors</groupId>
 			<artifactId>jersey-netty-connector</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-logging</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -116,6 +145,12 @@
 										<exclude>**/*.args</exclude>
 										<exclude>**/*.so</exclude>
 									</excludes>
+								</filter>
+								<filter>
+									<artifact>io.opentelemetry:*</artifact>
+									<includes>
+										<include>**/*</include>
+									</includes>
 								</filter>
 							</filters>
 							<transformers>

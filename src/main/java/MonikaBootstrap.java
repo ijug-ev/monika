@@ -1,9 +1,16 @@
 import static jakarta.ws.rs.core.Response.Status.Family.REDIRECTION;
 import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +23,32 @@ import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.UriBuilder;
 
 public class MonikaBootstrap {
+
+    private static final Collection<Path> mp;
+    static {
+        final var meter = GlobalOpenTelemetry.getMeter("eu.ijug.free_disk_space");
+        final var monitoredPaths = System.getenv("MONITORED_PATHS");
+        mp = monitoredPaths == null || monitoredPaths.isBlank() ? Set.of(Path.of("/"))
+                : Arrays.asList(monitoredPaths.split(File.pathSeparator)).stream().map(Path::of).toList();
+        assert mp != null && !mp.isEmpty() : "Monitored paths cannot be null nor empty";
+        mp.forEach(monitoredPath -> System.out.printf("Monitoring: %s%n", monitoredPath));
+        meter.gaugeBuilder("system.filesystem.free")
+            .setDescription("Free disk space (measured in percent)")
+            .setUnit("Percent")
+            .buildWithCallback(measurement -> {
+                mp.forEach(monitoredPath -> {
+                    try {
+                        final var fileStore = Files.getFileStore(monitoredPath);
+                        final var percentFree = Math.toIntExact(100 * fileStore.getUsableSpace() / fileStore.getTotalSpace());
+                        System.out.printf("%s is %d %% free%n", monitoredPath, percentFree);
+                        measurement.record(percentFree, Attributes.of(AttributeKey.stringKey("system.filesystem.mountpoint"), monitoredPath.toString()));
+                    } catch (final IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        });
+    }
+
 	public static void main(final String[] args) throws InterruptedException, ExecutionException {
 		final var port = Integer.parseInt(System.getenv().getOrDefault("IP_PORT", "8080"));
 
@@ -57,15 +90,7 @@ public class MonikaBootstrap {
 			return Set.of(MonikaResource.class);
 		}
 
-        private static final Map<String, Object> PROPERTIES;
-        static {
-            final var monitoredPaths = System.getenv("MONITORED_PATHS");
-            
-            final var mp = monitoredPaths == null || monitoredPaths.isBlank() ? Set.of(Path.of("/"))
-                    : Arrays.asList(monitoredPaths.split(File.pathSeparator)).stream().map(Path::of).toList();
-            mp.forEach(monitoredPath -> System.out.printf("Monitoring: %s%n", monitoredPath));
-            PROPERTIES = Map.of("MONITORED_PATHS", mp);
-        }
+        private static final Map<String, Object> PROPERTIES = Map.of("MONITORED_PATHS", mp);
 
         @Override
         public Map<String, Object> getProperties() {
@@ -81,7 +106,7 @@ public class MonikaBootstrap {
 			System.out.println("HEALTHCHECK " + uri);
 			if (!EnumSet.of(SUCCESSFUL, REDIRECTION).contains(ClientBuilder.newClient().target(uri).request().get().getStatusInfo().getFamily()))
                 throw new WebApplicationException();
-            
+
 			System.out.println("HEALTHY");
 			return HEALTH.SUCCESS;
 		} catch (final Throwable t) {
